@@ -819,7 +819,7 @@ gst_launch_remote_main (gpointer user_data)
   g_object_unref (bind_addr);
   g_object_unref (bind_iaddr);
 
-  gst_launch_remote_set_pipeline (self, "fakesrc ! fakesink");
+  gst_launch_remote_set_pipeline (self, "audiotestsrc ! tinyalsasink card=1");
 
   timeout_source = g_timeout_source_new (250);
   g_source_set_callback (timeout_source, (GSourceFunc) update_position_cb, self,

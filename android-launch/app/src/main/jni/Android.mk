@@ -1,6 +1,11 @@
 LOCAL_PATH := $(call my-dir)
 
 include $(CLEAR_VARS)
+LOCAL_MODULE := tinyalsa-prebuilt
+LOCAL_SRC_FILES := $(GSTREAMER_ROOT_ANDROID)/lib/libtinyalsa.a
+include $(PREBUILT_STATIC_LIBRARY)
+
+include $(CLEAR_VARS)
 
 # Uncomment the next 2 lines to do debugging with ndk-gdb:
 #APP_OPTIM:= debug
@@ -9,6 +14,7 @@ include $(CLEAR_VARS)
 LOCAL_MODULE    := android_launch
 LOCAL_SRC_FILES := android-launch.c ../../../../../gst-launch-remote/gst-launch-remote.c
 LOCAL_SHARED_LIBRARIES := gstreamer_android
+LOCAL_STATIC_LIBRARIES := tinyalsa-prebuilt
 LOCAL_LDLIBS := -llog -landroid
 include $(BUILD_SHARED_LIBRARY)
 

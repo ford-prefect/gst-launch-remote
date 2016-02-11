@@ -24,6 +24,8 @@
 #include <stdlib.h>
 #include <gst/net/net.h>
 
+#include <tinyalsa/asoundlib.h>
+
 GST_DEBUG_CATEGORY_STATIC (debug_category);
 #define GST_CAT_DEFAULT debug_category
 
@@ -633,6 +635,31 @@ read_line_cb (GObject * source_object, GAsyncResult * res, gpointer user_data)
       tmp = g_strdup_printf ("%" GST_TIME_FORMAT " / %" GST_TIME_FORMAT " @ %s\nLast message: %s\n", GST_TIME_ARGS (position), GST_TIME_ARGS (duration), gst_element_state_get_name (s), GST_STR_NULL (self->last_message));
       g_output_stream_write_all (self->ostream, tmp, strlen (tmp), NULL, NULL, NULL);
       g_free (tmp);
+    } else if (g_str_has_prefix (line, "+SET_VOLUME")) {
+      gchar *position = line + sizeof ("+SET_VOLUME ") - 1;
+      gchar *endptr = NULL;
+      guint64 volume = g_ascii_strtoull (position, &endptr, 10);
+      struct mixer *mixer;
+      struct mixer_ctl *ctl;
+      int i;
+
+      mixer = mixer_open(0 /* card */);
+      if (!mixer)
+        GST_WARNING ("Could not open mixer device");
+      else {
+        ctl = mixer_get_ctl_by_name (mixer, "PCM Playback Volume");
+        if (!ctl)
+          GST_WARNING ("Could not find mixer control");
+        else {
+          for (i = 0; i < mixer_ctl_get_num_values (ctl); i++) {
+            if (mixer_ctl_set_value (ctl, i, volume))
+              GST_WARNING ("Could not set control value");
+          }
+        }
+
+        mixer_close (mixer);
+      }
+
     } else if (!g_str_has_prefix (line, "+") && !g_str_has_prefix (line, "-")) {
       gst_launch_remote_set_pipeline (self, line);
     } else {
